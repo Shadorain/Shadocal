@@ -1,0 +1,21 @@
+[package]
+name = "shadogcal"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-cors = "0.7"
+actix-web = "4.9"
+anyhow = "1.0"
+chrono = "0.4"
+dotenv = "0.15.0"
+
+oauth2 = "4.4.2"
+url = "^2"
+
+gcal = "0.1"
+# gcal = { git = "https://github.com/Exotik850/gcal" }
+
+tokio = { version = "1", features = ["full"] }
+http-client = "6.5.3"
+futures = "0.3.30"
