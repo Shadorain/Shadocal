@@ -26,7 +26,8 @@ impl Format {
         Some(match self {
             Self::Tana => {
                 format!(
-                    "{} #meeting\nDate:: [[{}/{}]]",
+                    "{} #meeting \
+                    Date:: [[{}/{}]]",
                     event.summary?, event.start?.date_time?, event.end?.date_time?
                 )
             }

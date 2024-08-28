@@ -12,10 +12,8 @@ struct AppState {
     cal: Calendar,
 }
 impl AppState {
-    pub fn new() -> Result<Self> {
-        Ok(Self {
-            cal: Calendar::new()?,
-        })
+    pub fn new(cal: Calendar) -> Self {
+        Self { cal }
     }
 
     pub async fn process_events(&self, format: Format) -> Result<String> {
@@ -57,13 +55,14 @@ async fn tana(data: web::Data<AppState>) -> actix_web::Result<String> {
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
+    let cal = Calendar::new().await.expect("Failed to create app state");
+    let data = web::Data::new(AppState::new(cal));
+
     println!("🚀 Server started successfully");
     // std::env::var("CALENDER_ACCESS_FILE").expect("Provide an access key"),
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(
-                AppState::new().expect("Failed to create app state"),
-            ))
+            .app_data(data.clone())
             .wrap(
                 Cors::default()
                     .allowed_origin("https://app.tana.inc")
@@ -72,7 +71,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(tana)
     })
-    .bind(("127.0.0.1", 3001))?
+    .bind(("127.0.0.1", 7117))?
     .run()
     .await
 }
