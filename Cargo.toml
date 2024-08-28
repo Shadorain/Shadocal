@@ -9,6 +9,7 @@ actix-web = "4.9"
 anyhow = "1.0"
 chrono = "0.4"
 dotenv = "0.15.0"
+directories = "5.0"
 
 oauth2 = { version = "4.4.2" }
 url = "^2"

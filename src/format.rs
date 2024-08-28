@@ -1,4 +1,6 @@
-use gcal::Event;
+use std::fmt::Write;
+
+use gcal::{Event, EventCalendarDate};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Format {
@@ -10,7 +12,7 @@ pub enum Format {
 impl Format {
     pub fn format(self, events: Vec<Event>) -> Option<String> {
         let header = match self {
-            Self::Tana => "%%tana%%\n",
+            Self::Tana => "",
             Self::Raw => "",
         };
         Some(format!(
@@ -22,16 +24,51 @@ impl Format {
                 .join("\n")
         ))
     }
-    pub fn event(self, event: Event) -> Option<String> {
+    pub fn event(self, mut event: Event) -> Option<String> {
         Some(match self {
             Self::Tana => {
-                format!(
-                    "{} #meeting \
-                    Date:: [[{}/{}]]",
-                    event.summary?, event.start?.date_time?, event.end?.date_time?
-                )
+                let mut fmt = format!("- {} #meeting", event.summary?);
+                if let Some(date) = self.process_date(event.start.take(), event.end.take()) {
+                    write!(fmt, "\n  - Date:: [[date:{}]]", date).unwrap();
+                }
+                if let Some(attendees) = event.attendees {
+                    write!(
+                        fmt,
+                        "\n  - Attendees:: \n{}",
+                        attendees
+                            .iter()
+                            .map(|a| format!(
+                                "    - [[{} #person]]",
+                                a.display_name.as_deref().unwrap_or(a.email.as_ref())
+                            ))
+                            .collect::<Vec<_>>()
+                            .join("\n")
+                    )
+                    .unwrap();
+                }
+                fmt
             }
             Self::Raw => event.summary?,
+        })
+    }
+
+    fn process_date(
+        self,
+        start: Option<EventCalendarDate>,
+        end: Option<EventCalendarDate>,
+    ) -> Option<String> {
+        Some(match self {
+            Self::Tana => {
+                let get_date = |date: Option<EventCalendarDate>| -> Option<String> {
+                    let date = date?;
+                    date.date_time.or(date.date)
+                };
+
+                let start = get_date(start)?;
+                let end = get_date(end).unwrap_or("".to_string());
+                format!("{}{}{}", start, if end.is_empty() { "" } else { "/" }, end)
+            }
+            Self::Raw => start.clone()?.date_time?,
         })
     }
 }

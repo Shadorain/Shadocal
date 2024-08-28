@@ -10,35 +10,32 @@ use url::Url;
 use std::env;
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-pub async fn access_token(http_client: &impl HttpClient) -> String {
-    let google_client_id = ClientId::new(
-        env::var("GOOGLE_OAUTH_CLIENT_ID")
-            .expect("Missing the GOOGLE_OAUTH_CLIENT_ID environment variable."),
-    );
-    let google_client_secret = ClientSecret::new(
-        env::var("GOOGLE_OAUTH_CLIENT_SECRET")
-            .expect("Missing the GOOGLE_OAUTH_CLIENT_SECRET environment variable."),
-    );
-    let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
-        .expect("Invalid authorization endpoint URL");
-    let token_url = TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())
-        .expect("Invalid token endpoint URL");
+pub async fn access_token(http_client: &impl HttpClient, mut token_path: PathBuf) -> String {
+    token_path.push(".rtoken");
 
     // Set up the config for the Google OAuth2 process.
     let client = BasicClient::new(
-        google_client_id,
-        Some(google_client_secret),
-        auth_url,
-        Some(token_url),
+        ClientId::new(
+            env::var("GOOGLE_OAUTH_CLIENT_ID")
+                .expect("Missing the GOOGLE_OAUTH_CLIENT_ID environment variable."),
+        ),
+        Some(ClientSecret::new(
+            env::var("GOOGLE_OAUTH_CLIENT_SECRET")
+                .expect("Missing the GOOGLE_OAUTH_CLIENT_SECRET environment variable."),
+        )),
+        AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
+            .expect("Invalid authorization endpoint URL"),
+        Some(
+            TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())
+                .expect("Invalid token endpoint URL"),
+        ),
     )
-    // This example will be running its own server at localhost:8080.
-    // See below for the server implementation.
     .set_redirect_uri(
         RedirectUrl::new("http://localhost:8080".to_string()).expect("Invalid redirect URL"),
     )
-    // Google supports OAuth 2.0 Token Revocation (RFC-7009)
     .set_revocation_uri(
         RevocationUrl::new("https://oauth2.googleapis.com/revoke".to_string())
             .expect("Invalid revocation endpoint URL"),
@@ -88,7 +85,7 @@ pub async fn access_token(http_client: &impl HttpClient) -> String {
         })
     };
 
-    if let Some(rtoken) = check_rtoken() {
+    if let Some(rtoken) = check_rtoken(&token_path) {
         return client
             .exchange_refresh_token(&RefreshToken::new(rtoken))
             .request_async(req)
@@ -116,7 +113,7 @@ pub async fn access_token(http_client: &impl HttpClient) -> String {
         .set_pkce_challenge(pkce_code_challenge)
         .url();
 
-    println!("Open this URL in your browser:\n{authorize_url}\n");
+    println!("🔗 Open this URL in your browser:\n{authorize_url}\n");
 
     let (code, state) = {
         // A very naive implementation of the redirect server.
@@ -173,12 +170,12 @@ pub async fn access_token(http_client: &impl HttpClient) -> String {
     let Ok(tokens) = token_response else {
         panic!("Token exchange failed: {:?}", token_response);
     };
-    std::fs::write("./rtoken", tokens.refresh_token().unwrap().secret())
+    std::fs::write(&token_path, tokens.refresh_token().unwrap().secret())
         .expect("Failed to write refresh token to file.");
 
     tokens.access_token().secret().clone()
 }
 
-fn check_rtoken() -> Option<String> {
-    std::fs::read_to_string("./rtoken").ok()
+fn check_rtoken(token_path: &Path) -> Option<String> {
+    std::fs::read_to_string(token_path).ok()
 }

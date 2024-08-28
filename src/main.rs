@@ -1,6 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{get, web, App, HttpServer};
-use actix_web::{HttpResponse, Responder};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use anyhow::Result;
 
 mod calendar;
@@ -16,16 +15,13 @@ impl AppState {
         Self { cal }
     }
 
-    pub async fn process_events(&self, format: Format) -> Result<String> {
+    pub async fn get_events(&self, format: Format) -> Result<String> {
         let now = chrono::Local::now();
         let events = self
             .cal
-            .get_events(now - chrono::Duration::days(1), now)
+            .get_events(now - chrono::Duration::days(1), now, false)
             .await?;
 
-        for event in &events {
-            eprintln!("{:?} {:?}", event.id, event.summary);
-        }
         format
             .format(events)
             .ok_or(anyhow::anyhow!("No events found".to_string()))
@@ -39,14 +35,14 @@ async fn index() -> impl Responder {
 
 #[get("/raw")]
 async fn raw(data: web::Data<AppState>) -> actix_web::Result<String> {
-    data.process_events(Format::Raw)
+    data.get_events(Format::Raw)
         .await
         .map_err(|err| actix_web::error::ErrorFailedDependency(err.to_string()))
 }
 
 #[get("/tana")]
 async fn tana(data: web::Data<AppState>) -> actix_web::Result<String> {
-    data.process_events(Format::Tana)
+    data.get_events(Format::Tana)
         .await
         .map_err(|err| actix_web::error::ErrorFailedDependency(err.to_string()))
 }
@@ -59,7 +55,6 @@ async fn main() -> std::io::Result<()> {
     let data = web::Data::new(AppState::new(cal));
 
     println!("🚀 Server started successfully");
-    // std::env::var("CALENDER_ACCESS_FILE").expect("Provide an access key"),
     HttpServer::new(move || {
         App::new()
             .app_data(data.clone())
