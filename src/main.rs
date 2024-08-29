@@ -1,5 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{error, get, web, App, HttpResponse, HttpServer, Responder};
 use anyhow::Result;
 
 mod calendar;
@@ -37,14 +37,14 @@ async fn index() -> impl Responder {
 async fn raw(data: web::Data<AppState>) -> actix_web::Result<String> {
     data.get_events(Format::Raw)
         .await
-        .map_err(|err| actix_web::error::ErrorFailedDependency(err.to_string()))
+        .map_err(|err| error::ErrorFailedDependency(err.to_string()))
 }
 
 #[get("/tana")]
 async fn tana(data: web::Data<AppState>) -> actix_web::Result<String> {
     data.get_events(Format::Tana)
         .await
-        .map_err(|err| actix_web::error::ErrorFailedDependency(err.to_string()))
+        .map_err(|err| error::ErrorFailedDependency(err.to_string()))
 }
 
 #[actix_web::main]
