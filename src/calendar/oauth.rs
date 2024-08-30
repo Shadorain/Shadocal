@@ -14,9 +14,9 @@ pub async fn get_client() -> Result<Client> {
     dotenv::from_filename(data_dir.join("client")).ok();
 
     if let Some(rtoken) = check_rtoken(&data_dir.join(".rtoken")) {
-        if let Some(atoken) = check_rtoken(&data_dir.join(".atoken")) {
-            return Ok(Client::new_from_env(atoken, rtoken).await);
-        }
+        let client = Client::new_from_env("", rtoken).await;
+        client.refresh_access_token().await?;
+        return Ok(client);
     }
 
     let mut client = Client::new_from_env("", "").await;
@@ -33,8 +33,6 @@ pub async fn get_client() -> Result<Client> {
     let access_token = client.get_access_token(&code, &state).await?;
     std::fs::write(data_dir.join(".rtoken"), access_token.refresh_token)
         .expect("Failed to write refresh token to file.");
-    std::fs::write(data_dir.join(".atoken"), access_token.access_token)
-        .expect("Failed to write access token to file.");
 
     Ok(client)
 }
