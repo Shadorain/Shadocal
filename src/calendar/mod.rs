@@ -3,11 +3,13 @@ use chrono::{DateTime, Local};
 use google_calendar::{
     calendar_list::CalendarList,
     events::Events,
-    types::{Event, MinAccessRole, OrderBy},
+    types::{MinAccessRole, OrderBy},
 };
 
 mod oauth;
 use oauth::get_client;
+mod event;
+pub use event::Event;
 
 pub struct Calendar {
     events: Events,
@@ -36,6 +38,7 @@ impl Calendar {
             .body
         {
             events.extend(
+                // Documentation: [API Reference](https://developers.google.com/calendar/api/v3/reference/events/list)
                 self.events
                     .list(
                         &cal.id,
@@ -56,7 +59,9 @@ impl Calendar {
                         "",
                     )
                     .await?
-                    .body,
+                    .body
+                    .into_iter()
+                    .map(Event::from),
             );
         }
         Ok(events)

@@ -3,7 +3,7 @@ use actix_web::{error, get, web, App, HttpResponse, HttpServer, Responder};
 use anyhow::Result;
 
 mod calendar;
-use calendar::Calendar;
+use calendar::{Calendar, Event};
 mod format;
 use format::Format;
 
@@ -15,16 +15,17 @@ impl AppState {
         Self { cal }
     }
 
-    pub async fn get_events(&self, format: Format) -> Result<String> {
+    pub async fn get_events<T: Format>(&self) -> Result<String> {
         let now = chrono::Local::now();
         let events = self
             .cal
             .get_events(now - chrono::Duration::days(1), now, false)
             .await?;
-
-        format
-            .format(events)
-            .ok_or(anyhow::anyhow!("No events found".to_string()))
+        Ok(events
+            .into_iter()
+            .filter_map(|e| T::format(e))
+            .collect::<Vec<_>>()
+            .join(T::newline()))
     }
 }
 
@@ -35,14 +36,14 @@ async fn index() -> impl Responder {
 
 #[get("/raw")]
 async fn raw(data: web::Data<AppState>) -> actix_web::Result<String> {
-    data.get_events(Format::Raw)
+    data.get_events::<format::Raw>()
         .await
         .map_err(|err| error::ErrorFailedDependency(err.to_string()))
 }
 
 #[get("/tana")]
 async fn tana(data: web::Data<AppState>) -> actix_web::Result<String> {
-    data.get_events(Format::Tana)
+    data.get_events::<format::Tana>()
         .await
         .map_err(|err| error::ErrorFailedDependency(err.to_string()))
 }
