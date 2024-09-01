@@ -9,7 +9,7 @@ use google_calendar::{
 mod oauth;
 use oauth::get_client;
 mod event;
-pub use event::Event;
+pub use event::*;
 
 pub struct Calendar {
     events: Events,
@@ -61,7 +61,11 @@ impl Calendar {
                     .await?
                     .body
                     .into_iter()
-                    .map(Event::from),
+                    .map(|e| {
+                        let mut e = Event::from(e);
+                        e.set_calendar_id(cal.id.clone());
+                        e
+                    }),
             );
         }
         Ok(events)

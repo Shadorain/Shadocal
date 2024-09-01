@@ -3,7 +3,7 @@ use actix_web::{error, get, web, App, HttpResponse, HttpServer, Responder};
 use anyhow::Result;
 
 mod calendar;
-use calendar::{Calendar, Event};
+use calendar::*;
 mod format;
 use format::Format;
 

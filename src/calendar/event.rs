@@ -1,6 +1,7 @@
 #![allow(dead_code)]
-use google_calendar::types;
+use google_calendar::types::{self, ConferenceData};
 
+#[derive(Debug, Clone)]
 pub struct Event {
     pub event_type: EventType,
     pub cal_id: Option<String>, // Required
@@ -11,12 +12,13 @@ pub struct Event {
     pub description: Option<String>,
 
     pub start: String,
-    pub end: Option<String>, // Check endTimeUnspecified
+    pub end: Option<String>,
 
     pub attendees: Option<Vec<String>>,
 
     pub location: Option<String>,
-    pub link: Option<String>,
+    pub link: Option<(&'static str, String)>,
+    pub cal_link: Option<String>,
 }
 
 impl Event {
@@ -28,10 +30,9 @@ impl Event {
 impl From<types::Event> for Event {
     fn from(value: types::Event) -> Self {
         let event_type = EventType::from(value.event_type.as_str());
-        make_ascii_titlecase(&value.status);
         let start = get_date(value.start).expect("Failed to parse start date");
         let end = (!value.end_time_unspecified)
-            .then_some(get_date(value.end))
+            .then(|| get_date(value.end))
             .flatten();
         let attendees = (!value.attendees.is_empty()).then_some(
             value
@@ -50,18 +51,20 @@ impl From<types::Event> for Event {
             event_type,
             cal_id: None,
             id: value.id,
-            status: value.status,
+            status: make_ascii_titlecase(value.status),
             title: value.summary,
             description: empty_or(value.description),
             start,
             end,
             attendees,
             location: empty_or(value.location),
-            link: empty_or(value.html_link),
+            link: get_link(value.conference_data),
+            cal_link: empty_or(value.html_link),
         }
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EventType {
     Meeting,
     Birthday,
@@ -82,7 +85,7 @@ impl From<&str> for EventType {
 fn get_date(date: Option<types::EventDateTime>) -> Option<String> {
     let date = date?;
     date.date_time
-        .map(|d| d.to_rfc3339())
+        .map(|d| d.with_timezone(&chrono::Local).to_rfc3339())
         .or(date.date.map(|d| d.to_string()))
 }
 
@@ -94,10 +97,22 @@ fn empty_or(value: String) -> Option<String> {
     }
 }
 
-fn make_ascii_titlecase(s: &str) -> String {
-    let mut s = s.to_owned();
+fn make_ascii_titlecase(mut s: String) -> String {
+    // let mut s = s.to_owned();
     if let Some(r) = s.get_mut(0..1) {
         r.make_ascii_uppercase();
     }
     s
+}
+
+fn get_link(conf_data: Option<ConferenceData>) -> Option<(&'static str, String)> {
+    let e = conf_data?.entry_points.swap_remove(0);
+    Some((
+        match e.entry_point_type.as_str() {
+            "more" => "by Tel Link",
+            "phone" => "by Phone",
+            _ => "Meeting",
+        },
+        e.uri,
+    ))
 }
