@@ -1,10 +1,12 @@
 use actix_cors::Cors;
-use actix_web::{error, get, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 
 use super::*;
 
 mod state;
 use state::*;
+mod types;
+use types::*;
 mod tana;
 
 pub struct Server {
@@ -19,9 +21,6 @@ async fn index() -> impl Responder {
 
 #[get("/raw")]
 async fn raw(_: web::Data<State>) -> actix_web::Result<String> {
-    // data.get_events::<format::Raw>()
-    //     .await
-    //     .map_err(|err| error::ErrorFailedDependency(err.to_string()))
     todo!()
 }
 
