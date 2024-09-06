@@ -12,7 +12,7 @@ impl Format for Tana {
             date(event.start, event.end),
             status(event.status),
             id(event.id),
-            cal_id(event.cal_id.as_deref()),
+            cal_id(&event.cal_id),
             description(event.description).unwrap_or_default(),
             attendees(event.attendees).unwrap_or_default(),
             location(event.location).unwrap_or_default(),
@@ -75,8 +75,8 @@ fn attendees(attendees: Option<Vec<String>>) -> Option<String> {
 fn id(id: String) -> String {
     format!("  - [[Event ID]]:: {id}")
 }
-fn cal_id(cal_id: Option<&str>) -> String {
-    format!("  - [[Calendar ID]]:: {}", cal_id.unwrap())
+fn cal_id(cal_id: &str) -> String {
+    format!("  - [[Calendar ID]]:: {}", cal_id)
 }
 
 fn description(description: Option<String>) -> Option<String> {
@@ -101,11 +101,11 @@ fn cal_link(link: Option<String>) -> Option<String> {
     ))
 }
 
-fn setting(cal_id: Option<String>) -> String {
+fn setting(cal_id: String) -> String {
     // Assumes work email wouldnt have a `gmail.com` extension.
     format!(
         "\n  - Setting:: {}",
-        if cal_id.unwrap().contains("gmail.com") {
+        if cal_id.contains("gmail.com") {
             "[[🏠 Home/Personal]]"
         } else {
             "[[💼 Work]]"
