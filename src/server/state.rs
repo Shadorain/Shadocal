@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
 
 use super::{Calendar, Format};
@@ -11,11 +11,18 @@ impl State {
         Self { cal }
     }
 
-    pub async fn get_events<T: Format>(&self, start: NaiveDate, end: NaiveDate) -> Result<String> {
+    pub async fn get_event<T: Format>(&self, cal_id: String, event_id: String) -> Result<String> {
+        let event = self.cal.get_event(cal_id, event_id).await?;
+        println!("Event: {event:?}");
+        T::format(event).context("No event found")
+    }
+
+    pub async fn list_events<T: Format>(&self, start: NaiveDate, end: NaiveDate) -> Result<String> {
         let events = self
             .cal
-            .get_events(to_datetime(start), to_datetime(end), false)
+            .list_events(to_datetime(start), to_datetime(end), false)
             .await?;
+        println!("Events: {events:?}");
         Ok(events
             .into_iter()
             .filter_map(|e| T::format(e))

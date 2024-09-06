@@ -4,7 +4,7 @@ use google_calendar::types::{self, ConferenceData};
 #[derive(Debug, Clone)]
 pub struct Event {
     pub event_type: EventType,
-    pub cal_id: Option<String>, // Required
+    pub cal_id: String,
     pub id: String,
 
     pub status: String,
@@ -22,13 +22,7 @@ pub struct Event {
 }
 
 impl Event {
-    pub fn set_calendar_id(&mut self, cal_id: String) {
-        self.cal_id = Some(cal_id)
-    }
-}
-
-impl From<types::Event> for Event {
-    fn from(value: types::Event) -> Self {
+    pub fn convert(value: types::Event, cal_id: String) -> Self {
         let event_type = EventType::from(value.event_type.as_str());
         let start = get_date(value.start).expect("Failed to parse start date");
         let end = (!value.end_time_unspecified)
@@ -49,7 +43,7 @@ impl From<types::Event> for Event {
         );
         Self {
             event_type,
-            cal_id: None,
+            cal_id,
             id: value.id,
             status: make_ascii_titlecase(value.status),
             title: value.summary,

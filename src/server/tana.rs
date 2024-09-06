@@ -1,4 +1,8 @@
-use actix_web::{error, get, web, Result};
+use actix_web::{
+    error, get,
+    web::{self, Data, Json},
+    Result,
+};
 
 use super::{format, Get, List, State};
 
@@ -6,19 +10,21 @@ pub fn config(conf: &mut web::ServiceConfig) {
     conf.service(web::scope("/tana").service(get).service(list));
 }
 
-#[get("/get/{cal_id}/{event_id}")]
-async fn get(_: web::Data<State>, get: web::Path<Get>) -> Result<String> {
+#[get("/get")]
+async fn get(data: Data<State>, Json(get): Json<Get>) -> Result<String> {
     println!("{:?}", get);
-    todo!()
+    data.get_event::<format::Tana>(get.cal_id, get.event_id)
+        .await
+        .map_err(|err| error::ErrorFailedDependency(err.to_string()))
 }
 
 #[get("/list")]
-async fn list(data: web::Data<State>, list: web::Json<List>) -> Result<String> {
+async fn list(data: Data<State>, Json(list): Json<List>) -> Result<String> {
     println!("{:?}", &list);
     let (start, end) = list.extract().ok_or(error::JsonPayloadError::Payload(
         error::PayloadError::EncodingCorrupted,
     ))?;
-    data.get_events::<format::Tana>(start, end)
+    data.list_events::<format::Tana>(start, end)
         .await
         .map_err(|err| error::ErrorFailedDependency(err.to_string()))
 }

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
 use google_calendar::{
     calendar_list::CalendarList,
@@ -24,7 +24,23 @@ impl Calendar {
         })
     }
 
-    pub async fn get_events(
+    pub async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event> {
+        let cal = self
+            .cal_list
+            .list(0, MinAccessRole::Reader, "", false, true)
+            .await?
+            .body;
+        let cal = cal
+            .iter()
+            .find(|cal| cal.id == cal_id)
+            .context("Could not find specified calendar")?;
+        Ok(Event::convert(
+            self.events.get(&cal.id, &event_id, 0, "").await?.body,
+            cal.id.clone(),
+        ))
+    }
+
+    pub async fn list_events(
         &self,
         start: DateTime<Local>,
         end: DateTime<Local>,
@@ -61,11 +77,7 @@ impl Calendar {
                     .await?
                     .body
                     .into_iter()
-                    .map(|e| {
-                        let mut e = Event::from(e);
-                        e.set_calendar_id(cal.id.clone());
-                        e
-                    }),
+                    .map(|e| Event::convert(e, cal.id.clone())),
             );
         }
         Ok(events)
