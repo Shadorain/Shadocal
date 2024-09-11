@@ -13,7 +13,6 @@ impl State {
 
     pub async fn get_event<T: Format>(&self, cal_id: String, event_id: String) -> Result<String> {
         let event = self.cal.get_event(cal_id, event_id).await?;
-        println!("Event: {event:?}");
         T::format(event).context("No event found")
     }
 

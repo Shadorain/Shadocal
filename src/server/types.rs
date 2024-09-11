@@ -46,7 +46,6 @@ impl List {
 }
 fn extract_number(input: &str) -> Option<u32> {
     for part in input.split_whitespace() {
-        // Try to parse each part to a number
         if let Ok(number) = part.parse::<u32>() {
             return Some(number);
         }

@@ -42,6 +42,8 @@ fn supertag(event: &Event) -> &'static str {
         "#date-night"
     } else if title.contains("birthday") {
         "#birthday"
+    } else if title.contains("holiday") || event.cal_id.contains("holiday") {
+        "#holiday"
     } else {
         match event.event_type {
             EventType::Meeting => "#meeting",
