@@ -22,7 +22,6 @@ impl State {
             .cal
             .list_events(to_datetime(start), to_datetime(end), false)
             .await?;
-        println!("Events: {events:?}");
         Ok(events
             .into_iter()
             .filter_map(|e| T::format(e))
