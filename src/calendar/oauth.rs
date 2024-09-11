@@ -14,12 +14,16 @@ pub async fn get_client() -> Result<Client> {
     dotenv::from_filename(data_dir.join("client")).ok();
 
     if let Some(rtoken) = check_rtoken(&data_dir.join(".rtoken")) {
-        let client = Client::new_from_env("", rtoken).await;
-        client.refresh_access_token().await?;
+        let mut client = Client::new_from_env("", rtoken).await;
+        client
+            .set_auto_access_token_refresh(true)
+            .refresh_access_token()
+            .await?;
         return Ok(client);
     }
 
     let mut client = Client::new_from_env("", "").await;
+    client.set_auto_access_token_refresh(true);
     println!(
         "🔗 Open this URL in your browser:\n{}\n",
         client.user_consent_url(&[

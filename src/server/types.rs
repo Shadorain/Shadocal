@@ -10,7 +10,7 @@ pub enum Occurrence {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct List {
-    pub occurence: Occurrence,
+    pub occurrence: Occurrence,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub year: Option<i32>,
     pub start: String,
@@ -20,12 +20,13 @@ pub struct List {
 impl List {
     pub fn extract(&self) -> Option<(NaiveDate, NaiveDate)> {
         let year = self.year.unwrap_or(Utc::now().year());
-        let start = match self.occurence {
+        let start = match self.occurrence {
             Occurrence::Daily => {
-                NaiveDate::parse_from_str(&format!("{} {}", self.start, year), "%a, %b %-d %Y").ok()
+                // NaiveDate::parse_from_str(&format!("{} {}", self.start, year), "%a, %b %-d %Y").ok() Example: Fri, Sep 6
+                NaiveDate::parse_from_str(&self.start, "%F - %A").ok()
             }
             Occurrence::Weekly => {
-                NaiveDate::from_isoywd_opt(year, extract_number(&self.start)?, Weekday::Sun)
+                NaiveDate::from_isoywd_opt(year, extract_number(&self.start)?, Weekday::Mon)
             }
             Occurrence::Monthly => NaiveDate::from_ymd_opt(
                 year,
@@ -35,7 +36,7 @@ impl List {
         }?;
         Some((
             start,
-            match self.occurence {
+            match self.occurrence {
                 Occurrence::Daily => start + Duration::days(1),
                 Occurrence::Weekly => start + Duration::weeks(1),
                 Occurrence::Monthly => start + Months::new(1),

@@ -1,5 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http, web, App, HttpResponse, HttpServer, Responder};
 
 use super::*;
 
@@ -38,7 +38,9 @@ impl Server {
                 .wrap(
                     Cors::default()
                         .allowed_origin("https://app.tana.inc")
-                        .allowed_methods(vec!["GET", "POST"]),
+                        .allowed_methods(vec!["GET", "POST"])
+                        .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+                        .allowed_header(http::header::CONTENT_TYPE),
                 )
                 .service(index)
                 .configure(tana::config)
