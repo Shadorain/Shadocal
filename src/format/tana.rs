@@ -107,7 +107,7 @@ fn setting(cal_id: String) -> String {
     // Assumes work email wouldnt have a `gmail.com` extension.
     format!(
         "\n  - Setting:: {}",
-        if cal_id.contains("gmail.com") {
+        if cal_id.contains("gmail.com") || cal_id.contains("holiday") {
             "[[🏠 Home/Personal]]"
         } else {
             "[[💼 Work]]"
