@@ -9,10 +9,8 @@ readme = "README.md"
 license = "GPL-3.0"
 keywords = ["google_calendar", "calendar", "oauth2", "formatter", "events"]
 categories = [
-    "network-programming",
-    "asynchronous",
     "web-programming::http-server",
-    "web-programming::websocket",
+    "asynchronous",
     "date-and-time",
     "value-formatting",
 ]
