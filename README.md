@@ -109,6 +109,8 @@ Be sure to visit the [Wiki](https://github.com/Shadorain/ShadoGCal/wiki) for exa
 > In the current state this project meets my needs for my Tana workflow but I
 > will continue to work on this as I can to add these other features.
 
+- [ ] Allow multiple Google account connections
+  - Should be possible assuming OAuth2 authorization doesn't hold me back here
 - [ ] Make this into an API library
 - [ ] Allow for user defined custom `Format`s
 - [ ] Add better customization of hard coded `Format`s
@@ -116,3 +118,6 @@ Be sure to visit the [Wiki](https://github.com/Shadorain/ShadoGCal/wiki) for exa
   - This adds uneeded complexity depending on how the Authentication is done.
 - [ ] Potentially ship binary builds for Linux, Mac, and Windows.
   - This is quite a tedius and fallible process, so I will push this off unless it gains alot of traction.
+- [ ] Graphical User Interface (depends on above)
+  - This could be quite a pain and would definitely need shipping of executables
+  - Also multi platform support isn't the easiest with this so can see how needed it is
