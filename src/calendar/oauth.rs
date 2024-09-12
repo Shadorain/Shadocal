@@ -82,7 +82,7 @@ fn get_code_state() -> (String, String) {
 
 pub fn data_directory() -> Result<PathBuf> {
     Ok(
-        if let Some(proj_dirs) = ProjectDirs::from("com", "shadorain", "gcal") {
+        if let Some(proj_dirs) = ProjectDirs::from("com", "shadorain", "shadocal") {
             proj_dirs.data_local_dir().to_path_buf()
         } else {
             return Err(anyhow::anyhow!(

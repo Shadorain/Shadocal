@@ -1,20 +1,31 @@
 [package]
-name = "shadogcal"
-version = "0.1.0"
+name = "shadocal"
+version = "0.1.1"
 edition = "2021"
+authors = ["Shadorain"]
+repository = "https://github.com/Shadorain/Shadocal"
+description = "A blazingly fast, Google calendar (more in future) event formatter webserver tool."
+readme = "README.md"
+license = "GPL-3.0"
+keywords = ["google_calendar", "calendar", "oauth2", "formatter", "events"]
+categories = [
+    "network-programming",
+    "asynchronous",
+    "web-programming::http-server",
+    "web-programming::websocket",
+    "date-and-time",
+    "value-formatting",
+]
 
 [dependencies]
-actix-cors = "0.7"
-actix-web = "4.9"
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
-dotenv = "0.15.0"
 directories = "5.0"
+dotenv = "0.15.0"
 
-google-calendar = "0.7.0"
-oauth2 = { version = "4.4.2" }
+actix-cors = "0.7"
+actix-web = "4.9"
 url = "^2"
 
-tokio = { version = "1", features = ["full"] }
-futures = "0.3.30"
+google-calendar = "0.7.0"
 serde = { version = "1.0.209", features = ["derive"] }

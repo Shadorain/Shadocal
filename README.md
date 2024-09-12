@@ -8,8 +8,8 @@
 
 > A blazingly fast, Google calendar (more in future) event formatter webserver tool.
 
-<a href="https://docs.rs/phantom-editor/latest/phantom/"> ![Docs](https://img.shields.io/docsrs/phantom-editor?color=37d4a7&logo=rust&style=for-the-badge)</a>
-<a href="https://crates.io/crates/asset-derive"> ![Crate](https://img.shields.io/crates/v/phantom-editor?color=ff4971&style=for-the-badge)</a>
+<a href="https://docs.rs/shadocal/latest/shadocal/"> ![Docs](https://img.shields.io/docsrs/shadocal?color=37d4a7&logo=rust&style=for-the-badge)</a>
+<a href="https://crates.io/crates/shadocal"> ![Crate](https://img.shields.io/crates/v/shadocal?color=ff4971&style=for-the-badge)</a>
 <a href="/LICENSE"> ![License](https://img.shields.io/badge/license-GPL%20v3-blueviolet?style=for-the-badge)</a>
 <a href="#development"> ![Status](https://img.shields.io/badge/status-WIP-informational?style=for-the-badge&color=ff69b4) </a>
 
