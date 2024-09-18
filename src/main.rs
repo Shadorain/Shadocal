@@ -4,6 +4,7 @@ mod format;
 use format::Format;
 mod server;
 use server::Server;
+mod account;
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {

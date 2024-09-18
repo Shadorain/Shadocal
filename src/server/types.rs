@@ -22,7 +22,7 @@ impl List {
         let year = self.year.unwrap_or(Utc::now().year());
         let start = match self.occurrence {
             Occurrence::Daily => {
-                // NaiveDate::parse_from_str(&format!("{} {}", self.start, year), "%a, %b %-d %Y").ok() Example: Fri, Sep 6
+                // NaiveDate::parse_from_str(&format!("{} {}", self.start, year), "%a, %b %-d %Y").ok() // Example: Fri, Sep 6
                 NaiveDate::parse_from_str(&self.start, "%F - %A").ok()
             }
             Occurrence::Weekly => {
