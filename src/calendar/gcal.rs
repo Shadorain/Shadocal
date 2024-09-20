@@ -1,42 +1,31 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
-use google_calendar::{
-    calendar_list::CalendarList,
-    events::Events,
-    types::{MinAccessRole, OrderBy},
-};
+use gcal_rs::{CalendarListClient, EventClient, GCalClient};
 
 use super::{oauth::*, Calendar, Event};
 
 pub struct GoogleCalendar {
-    events: Events,
-    cal_list: CalendarList,
+    events: EventClient,
+    calendars: CalendarListClient,
 }
 impl GoogleCalendar {
-    pub async fn new() -> Result<Self> {
-        let client = get_client().await?;
-        Ok(Self {
-            events: client.events(),
-            cal_list: client.calendar_list(),
-        })
+    pub async fn new(access_token: String) -> Result<Self> {
+        let (events, calendars) = GCalClient::new(access_token).clients();
+        Ok(Self { events, calendars })
     }
 }
 
 impl Calendar for GoogleCalendar {
     async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event> {
         let cal = self
-            .cal_list
+            .calendars
             .list(0, MinAccessRole::Reader, "", false, true)
-            .await?
-            .body;
+            .await?;
         let cal = cal
             .iter()
             .find(|cal| cal.id == cal_id)
             .context("Could not find specified calendar")?;
-        Ok(Event::convert(
-            self.events.get(&cal.id, &event_id, 0, "").await?.body,
-            cal.id.clone(),
-        ))
+        Ok(self.events.get(&cal.id, &event_id, 0, "").await)
     }
 
     async fn list_events(
@@ -47,10 +36,9 @@ impl Calendar for GoogleCalendar {
     ) -> Result<Vec<Event>> {
         let mut events = Vec::new();
         for cal in self
-            .cal_list
+            .calendars
             .list(0, MinAccessRole::Reader, "", false, true)
             .await?
-            .body
         {
             events.extend(
                 // Documentation: [API Reference](https://developers.google.com/calendar/api/v3/reference/events/list)

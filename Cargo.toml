@@ -25,5 +25,5 @@ actix-cors = "0.7"
 actix-web = "4.9"
 url = "^2"
 
-google-calendar = "0.7.0"
 serde = { version = "1.0.209", features = ["derive"] }
+gcal_rs = "0.1.1"
