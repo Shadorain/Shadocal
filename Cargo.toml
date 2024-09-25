@@ -26,4 +26,5 @@ actix-web = "4.9"
 url = "^2"
 
 serde = { version = "1.0.209", features = ["derive"] }
-gcal_rs = "0.1.1"
+gcal_rs = "0.1.4"
+async-trait = "0.1.82"

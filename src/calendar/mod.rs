@@ -3,21 +3,20 @@ use chrono::{DateTime, Local};
 
 mod event;
 mod gcal;
-mod oauth;
+
+pub use async_trait::async_trait as calendar_trait;
 
 pub use event::*;
-pub use gcal::GoogleCalendar;
 
-pub trait Calendar {
-    async fn new(refresh_token: String) -> Result<Self>
-    where
-        Self: Sized;
+pub enum CalendarType {
+    Google,
+    Custom(Box<dyn Calendar>),
+}
+
+#[calendar_trait]
+pub trait Calendar: Send + Sync {
     async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event>;
 
-    async fn list_events(
-        &self,
-        start: DateTime<Local>,
-        end: DateTime<Local>,
-        hidden: bool,
-    ) -> Result<Vec<Event>>;
+    async fn list_events(&self, start: DateTime<Local>, end: DateTime<Local>)
+        -> Result<Vec<Event>>;
 }
