@@ -1,31 +1,40 @@
-use anyhow::{Context, Result};
+use std::collections::HashMap;
+
+use anyhow::{anyhow, Result};
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
 
-use super::{Calendar, Format};
+use super::{Calendar, Event};
 
+#[derive(Default)]
 pub struct State {
-    cal: Calendar,
+    calendars: HashMap<String, Box<dyn Calendar>>,
 }
 impl State {
-    pub fn new(cal: Calendar) -> Self {
-        Self { cal }
+    pub fn new() -> Self {
+        Self {
+            calendars: HashMap::new(),
+        }
     }
 
-    pub async fn get_event<T: Format>(&self, cal_id: String, event_id: String) -> Result<String> {
-        let event = self.cal.get_event(cal_id, event_id).await?;
-        T::format(event).context("No event found")
+    pub async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event> {
+        self.get_cal(&cal_id)?.get_event(cal_id, event_id).await
     }
 
-    pub async fn list_events<T: Format>(&self, start: NaiveDate, end: NaiveDate) -> Result<String> {
-        let events = self
-            .cal
-            .list_events(to_datetime(start), to_datetime(end), false)
-            .await?;
-        Ok(events
-            .into_iter()
-            .filter_map(|e| T::format(e))
-            .collect::<Vec<_>>()
-            .join(T::newline()))
+    pub async fn list_events(&self, start: NaiveDate, end: NaiveDate) -> Result<Vec<Event>> {
+        let mut events = Vec::new();
+        for (_, cal) in self.calendars.iter() {
+            events.extend(
+                cal.list_events(to_datetime(start), to_datetime(end))
+                    .await?,
+            );
+        }
+        Ok(events)
+    }
+
+    fn get_cal(&self, cal_id: &str) -> Result<&Box<dyn Calendar>> {
+        self.calendars
+            .get(cal_id)
+            .ok_or_else(|| anyhow!("No such calendar for id: {}", cal_id))
     }
 }
 

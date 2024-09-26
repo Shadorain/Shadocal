@@ -1,13 +1,15 @@
 use actix_cors::Cors;
 use actix_web::{get, http, web, App, HttpResponse, HttpServer, Responder};
 
-use super::*;
-
+mod auth;
 mod state;
-use state::*;
-mod types;
-use types::*;
 mod tana;
+mod types;
+
+use state::*;
+use types::*;
+
+use super::*;
 
 pub struct Server {
     ip: String,
@@ -28,8 +30,8 @@ impl Server {
     pub fn new(ip: String, port: u16) -> Self {
         Self { ip, port }
     }
-    pub async fn run(self, cal: Calendar) -> anyhow::Result<()> {
-        let state = web::Data::new(State::new(cal));
+    pub async fn run(self) -> anyhow::Result<()> {
+        let state = web::Data::new(State::new());
 
         println!("🚀 Server started successfully");
         HttpServer::new(move || {
