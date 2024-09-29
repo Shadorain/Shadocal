@@ -12,6 +12,14 @@ pub enum CalendarType {
     Google,
     Custom(Box<dyn Calendar>),
 }
+impl CalendarType {
+    pub async fn init(self, token: Option<String>) -> Result<Box<dyn Calendar>> {
+        Ok(match self {
+            Self::Google => Box::new(gcal::GoogleCalendar::new(token).await?),
+            Self::Custom(c) => c,
+        })
+    }
+}
 
 #[calendar_trait]
 pub trait Calendar: Send + Sync {
@@ -19,4 +27,8 @@ pub trait Calendar: Send + Sync {
 
     async fn list_events(&self, start: DateTime<Local>, end: DateTime<Local>)
         -> Result<Vec<Event>>;
+
+    async fn token(&self) -> Option<String> {
+        None
+    }
 }

@@ -3,17 +3,31 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
 
-use super::{Calendar, Event};
+use super::{Calendar, CalendarType, Config, Event};
 
 #[derive(Default)]
 pub struct State {
     calendars: HashMap<String, Box<dyn Calendar>>,
+
+    config: Option<Config>,
 }
 impl State {
-    pub fn new() -> Self {
-        Self {
-            calendars: HashMap::new(),
+    pub async fn new(config: Option<Config>) -> Result<Self> {
+        let mut calendars = HashMap::new();
+        if let Some(config) = &config {
+            for (id, tok) in config.calendars.iter() {
+                println!("[INFO] Adding calendar: {} with id: {}", tok, id);
+                calendars.insert(
+                    id.clone(),
+                    CalendarType::Google.init(Some(tok.clone())).await?,
+                );
+            }
         }
+        Ok(Self { calendars, config })
+    }
+
+    pub fn add_calendar(&mut self, id: String, cal: Box<dyn Calendar>) {
+        self.calendars.insert(id, cal);
     }
 
     pub async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event> {
@@ -31,10 +45,11 @@ impl State {
         Ok(events)
     }
 
-    fn get_cal(&self, cal_id: &str) -> Result<&Box<dyn Calendar>> {
+    fn get_cal(&self, cal_id: &str) -> Result<&dyn Calendar> {
         self.calendars
             .get(cal_id)
             .ok_or_else(|| anyhow!("No such calendar for id: {}", cal_id))
+            .map(|x| &**x)
     }
 }
 
