@@ -1,4 +1,4 @@
-use super::{Event, EventType, Format};
+use super::{Event, EventStatus, EventType, Format};
 
 pub struct Tana;
 
@@ -61,8 +61,15 @@ fn date(start: String, end: Option<String>) -> String {
         if end.is_empty() { "" } else { "/" },
     )
 }
-fn status(status: String) -> String {
-    format!("  - [[Event status]]:: {status}")
+fn status(status: EventStatus) -> String {
+    format!(
+        "  - [[Event status]]:: {}",
+        match status {
+            EventStatus::Confirmed => "Confirmed",
+            EventStatus::Tentative => "Tentative",
+            EventStatus::Cancelled => "Cancelled",
+        }
+    )
 }
 fn attendees(attendees: Option<Vec<String>>) -> Option<String> {
     Some(format!(
