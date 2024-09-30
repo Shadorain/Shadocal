@@ -1,10 +1,13 @@
-[package]
-name = "shadocal"
+[workspace]
+resolver = "2"
+members = ["shadocal", "shadocal-lib"]
+default-members = ["shadocal"]
+
+[workspace.package]
 version = "0.1.1"
 edition = "2021"
 authors = ["Shadorain"]
 repository = "https://github.com/Shadorain/Shadocal"
-description = "A blazingly fast, Google calendar (more in future) event formatter webserver tool."
 readme = "README.md"
 license = "GPL-3.0"
 keywords = ["google_calendar", "calendar", "oauth2", "formatter", "events"]
@@ -15,18 +18,6 @@ categories = [
     "value-formatting",
 ]
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-directories = "5.0"
-dotenv = "0.15.0"
-
-actix-cors = "0.7"
-actix-web = "4.9"
-url = "^2"
-
-gcal_rs = "0.1.5"
-serde = { version = "1.0.209", features = ["derive"] }
-async-trait = "0.1.82"
 tokio = "1.40.0"
-toml = "0.8.19"
