@@ -49,12 +49,12 @@ Use the beginning steps of [this handy guide](https://developers.google.com/cale
 
 - Enable the API
 - Configure the OAuth consent screen
-- Download the `credentials.json` file
+- Get the client ID and client secret
 
-Once you have your `credentials.json` file, get the contents and encode them in [`base64` format](https://www.base64encode.org/).
-Now set this environment variable to the encoded string:
+Now set these environment variables:
 ```bash
-export GOOGLE_KEY_ENCODED=PUT_THE_BASE64_KEY_HERE
+export GOOGLE_CLIENT_ID=CLIENT_ID_HERE
+export GOOGLE_CLIENT_SECRET=CLIENT_SECRET_HERE
 ```
 
 This can be put in a file (without "export") in your local data directory.  
@@ -68,7 +68,7 @@ On the first run of Shadocal, it will ask you to authenticate with your Google a
 
 The Rust ecosystem must be installed, use the [Rustup toolchain](https://rustup.rs/) installer which makes the process incredibly easy.
 
-To install the latest stable version of Shadocal using `cargo` use this command:
+To install the latest stable version of Shadocal using `cargo`, use this command:
 ```rust
 cargo install shadocal
 ```
@@ -76,6 +76,13 @@ cargo install shadocal
 #### Executable
 
 Currently there are no executable builds for this project yet, see [Tasks](#tasks).
+
+#### Library
+
+To add the latest stable version of the Shadocal library using `cargo`, use this command:
+```rust
+cargo add shadocal-lib
+```
 
 
 ## Notes
@@ -109,12 +116,12 @@ Be sure to visit the [Wiki](https://github.com/Shadorain/ShadoGCal/wiki) for exa
 > In the current state this project meets my needs for my Tana workflow but I
 > will continue to work on this as I can to add these other features.
 
-- [ ] Allow multiple Google account connections
+- [X] Allow multiple Google account connections (#4)
   - Should be possible assuming OAuth2 authorization doesn't hold me back here
-- [ ] Make this into an API library
+- [X] Make this into an API library (#6)
 - [ ] Allow for user defined custom `Format`s
 - [ ] Add better customization of hard coded `Format`s
-- [ ] Potentially add support for other calendar types
+- [-] Potentially add support for other calendar types
   - This adds uneeded complexity depending on how the Authentication is done.
 - [ ] Potentially ship binary builds for Linux, Mac, and Windows.
   - This is quite a tedius and fallible process, so I will push this off unless it gains alot of traction.

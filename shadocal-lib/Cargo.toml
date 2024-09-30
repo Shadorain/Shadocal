@@ -1,0 +1,28 @@
+[package]
+name = "shadocal-lib"
+description = "A blazingly fast, calendar event formatter webserver library."
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+tokio.workspace = true
+
+chrono = { version = "0.4", features = ["serde"] }
+directories = "5.0"
+dotenv = "0.15.0"
+
+actix-cors = "0.7"
+actix-web = "4.9"
+url = "^2"
+
+gcal_rs = "0.1.5"
+serde = { version = "1.0.209", features = ["derive"] }
+async-trait = "0.1.82"
+toml = "0.8.19"

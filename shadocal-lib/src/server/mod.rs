@@ -1,12 +1,12 @@
 use actix_cors::Cors;
 use actix_web::{get, http, web, App, HttpResponse, HttpServer, Responder};
 
-mod state;
+pub mod state;
 mod tana;
 mod types;
 
-use state::*;
-use types::*;
+pub use state::State;
+pub use types::*;
 
 use super::*;
 

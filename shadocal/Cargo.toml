@@ -1,0 +1,16 @@
+[package]
+name = "shadocal"
+description = "A blazingly fast, calendar event formatter webserver tool."
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+shadocal-lib = { path = "../shadocal-lib" }
+anyhow.workspace = true
+tokio.workspace = true
