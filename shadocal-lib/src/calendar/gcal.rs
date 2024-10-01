@@ -12,14 +12,13 @@ use gcal_rs::{
 use tokio::sync::RwLock;
 
 use super::{calendar_trait, Calendar, Event, EventStatus, EventType};
-use crate::server;
 
 static OAUTH: LazyLock<RwLock<OAuth>> = LazyLock::new(|| {
     let client_id = std::env::var("GOOGLE_CLIENT_ID")
         .expect("[ERR] Missing the GOOGLE_CLIENT_ID environment variable.");
     let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")
         .expect("[ERR] Missing the GOOGLE_CLIENT_SECRET environment variable.");
-    let (ip, port) = server::ip_port();
+    let (ip, port) = crate::ip_port();
     OAuth::new(
         client_id,
         client_secret,

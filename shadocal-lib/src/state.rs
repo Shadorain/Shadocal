@@ -3,19 +3,17 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
 
-use super::{Calendar, CalendarType, Config, Event};
+use super::{Calendar, CalendarType, Event};
 
 #[derive(Default)]
 pub struct State {
     calendars: HashMap<String, Box<dyn Calendar>>,
-
-    config: Option<Config>,
 }
 impl State {
-    pub async fn new(config: Option<Config>) -> Result<Self> {
+    pub async fn new(config: Option<HashMap<String, String>>) -> Result<Self> {
         let mut calendars = HashMap::new();
         if let Some(config) = &config {
-            for (id, tok) in config.calendars.iter() {
+            for (id, tok) in config.iter() {
                 println!("[INFO] Adding calendar: {} with id: {}", tok, id);
                 calendars.insert(
                     id.clone(),
@@ -23,7 +21,7 @@ impl State {
                 );
             }
         }
-        Ok(Self { calendars, config })
+        Ok(Self { calendars })
     }
 
     pub fn add_calendar(&mut self, id: String, cal: Box<dyn Calendar>) {

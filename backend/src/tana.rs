@@ -4,7 +4,11 @@ use actix_web::{
     Result,
 };
 
-use super::{format::Tana, Format, Get, List, State};
+use shadocal_lib::{
+    format::{Format, Tana},
+    types::{Get, List},
+    State,
+};
 
 pub fn config(conf: &mut web::ServiceConfig) {
     conf.service(web::scope("/tana").service(get).service(list));
