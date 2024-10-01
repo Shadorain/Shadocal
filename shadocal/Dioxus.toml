@@ -1,0 +1,43 @@
+[application]
+
+# App (Project) Name
+name = "shadocal"
+
+# Dioxus App Default Platform
+# web, desktop, fullstack
+default_platform = "desktop"
+
+# `build` & `serve` dist path
+out_dir = "dist"
+
+# assets file folder
+asset_dir = "public"
+
+[web.app]
+
+# HTML title tag content
+title = "shadocal"
+
+[web.watcher]
+
+# when watcher trigger, regenerate the `index.html`
+reload_html = true
+
+# which files or dirs will be watcher monitoring
+watch_path = ["src", "public"]
+
+# include `assets` in web platform
+[web.resource]
+
+# CSS style file
+
+style = ["/tailwind.css"]
+
+# Javascript code file
+script = []
+
+[web.resource.dev]
+
+# Javascript code file
+# serve: [dev-server] only
+script = []
