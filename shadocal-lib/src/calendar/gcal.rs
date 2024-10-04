@@ -34,10 +34,7 @@ pub struct GoogleCalendar {
 }
 
 impl GoogleCalendar {
-    pub async fn new(token: Option<String>) -> Result<Self>
-    where
-        Self: Sized,
-    {
+    pub async fn new(token: Option<String>) -> Result<Self> {
         let token = if let Some(token) = token {
             OAUTH.read().await.exhange_refresh(token).await
         } else {

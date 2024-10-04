@@ -9,6 +9,5 @@ mod tana;
 #[tokio::main]
 async fn main() -> Result<()> {
     let (ip, port) = ip_port();
-    let state = State::new(None).await?;
-    Server::new(ip, port).run(state).await
+    Server::new(ip, port).run(State::new()).await
 }

@@ -21,3 +21,4 @@ categories = [
 [workspace.dependencies]
 anyhow = "1.0"
 tokio = "1.40.0"
+serde = { version = "1.0.210", features = ["derive"] }
