@@ -13,5 +13,5 @@ pub fn ip_port() -> (String, u16) {
         v.parse::<u16>()
             .expect("Invalid environment variable: SHADOCAL_PORT. Must be a valid port number.")
     });
-    (ip.unwrap_or("0.0.0.0".to_string()), port.unwrap_or(7117))
+    (ip.unwrap_or("127.0.0.1".to_string()), port.unwrap_or(7117))
 }

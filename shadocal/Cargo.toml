@@ -14,7 +14,18 @@ categories.workspace = true
 shadocal-lib = { path = "../shadocal-lib" }
 anyhow.workspace = true
 tokio.workspace = true
+serde.workspace = true
 
-dioxus = { version = "0.5", features = ["desktop"] }
+axum = { version = "0.7.7", optional = true }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", features = [
+    "fullstack",
+    "router",
+] }
 dioxus-logger = "0.5.1"
-manganis = "0.2.2"
+toml = "0.8.19"
+directories = "5.0.1"
+
+[features]
+default = []
+server = ["dioxus/axum", "axum"]
+desktop = ["dioxus/desktop"]

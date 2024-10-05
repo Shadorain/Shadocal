@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, fs::write, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
@@ -29,6 +29,17 @@ impl Config {
         let mut config = toml::from_str::<Config>(&std::fs::read_to_string(&path)?)?;
         config.path = path;
         Ok(config)
+    }
+
+    pub fn add_calendar(&mut self, id: String, token: String) -> Result<()> {
+        self.calendars.insert(id, token);
+        self.write()
+    }
+    pub fn write(&self) -> Result<()> {
+        Ok(write(
+            self.path.as_os_str(),
+            toml::to_string_pretty(&self)?,
+        )?)
     }
 }
 

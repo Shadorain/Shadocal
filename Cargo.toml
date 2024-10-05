@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "backend","shadocal", "shadocal-lib"]
+members = ["backend", "shadocal", "shadocal-lib"]
 default-members = ["shadocal"]
 
 [workspace.package]

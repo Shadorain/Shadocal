@@ -1,9 +1,6 @@
-#![allow(non_snake_case)]
 use anyhow::Result;
-
-mod app;
-use app::App;
+use shadocal::App;
 
 fn main() -> Result<()> {
-    App::run(None)
+    App::run()
 }
