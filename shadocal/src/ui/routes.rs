@@ -1,12 +1,9 @@
 use dioxus::prelude::*;
-use dioxus_logger::tracing::info;
 
 mod home;
 use home::Home;
 mod components;
 use components::*;
-
-use super::server;
 
 #[derive(Routable, Debug, Clone)]
 pub enum Route {
