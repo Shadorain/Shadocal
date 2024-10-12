@@ -17,52 +17,58 @@ impl App {
         #[cfg(feature = "server")]
         App::server();
 
+        // #[cfg(feature = "web")]
+        // dioxus::fulstack::launch(app);
+
         #[cfg(feature = "desktop")]
         {
-            let (ip, port) = shadocal_lib::ip_port();
-            dioxus::fullstack::prelude::server_fn::client::set_server_url("http://{ip}:{port}");
+            // let (ip, port) = shadocal_lib::ip_port();
+            // dioxus::fullstack::prelude::server_fn::client::set_server_url(&format!(
+            //     "http://{ip}:{port}"
+            // ));
+            dioxus::fullstack::prelude::server_fn::client::set_server_url("http://127.0.0.1:7117");
             LaunchBuilder::fullstack()
-            .with_cfg(desktop! {
-                use dioxus::{fullstack::Config, desktop::{self, tao::dpi::PhysicalSize}};
-                use crate::{SHADOCAL_TITLE, SHADOCAL_VERSION, SHADOCAL_TITLE_DESC};
+                .with_cfg(desktop! {
+                    use dioxus::{fullstack::Config, desktop::{self, tao::dpi::PhysicalSize}};
+                    use crate::{SHADOCAL_TITLE, SHADOCAL_VERSION, SHADOCAL_TITLE_DESC};
 
-                const MIN_WINDOW_WIDTH: u32 = 302;
-                const MIN_WINDOW_HEIGHT: u32 = 574;
+                    const MIN_WINDOW_WIDTH: u32 = 302;
+                    const MIN_WINDOW_HEIGHT: u32 = 574;
 
-                Config::new().with_desktop_config(
-                    desktop::Config::new()
-                        .with_custom_head(
-                            r#"<script src="https://cdn.tailwindcss.com"> </script>"#.to_string(),
-                        )
-                        // .with_custom_head(r#"<link rel="stylesheet" href="tailwind.css">"#.to_string())
-                        .with_window(
-                            desktop::WindowBuilder::new()
-                                .with_decorations(false)
-                                .with_title(format!(
-                                    "{SHADOCAL_TITLE} v{SHADOCAL_VERSION} - {SHADOCAL_TITLE_DESC}"
-                                ))
-                                .with_maximizable(true)
-                                .with_minimizable(true)
-                                .with_min_inner_size(PhysicalSize::new(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT))
-                                .with_inner_size_constraints(
-                                    desktop::tao::window::WindowSizeConstraints::new(
-                                        Some(desktop::tao::dpi::PixelUnit::Physical(
-                                            MIN_WINDOW_WIDTH.into(),
-                                        )),
-                                        Some(desktop::tao::dpi::PixelUnit::Physical(
-                                            MIN_WINDOW_HEIGHT.into(),
-                                        )),
-                                        None,
-                                        None,
-                                    ),
-                                )
-                                .with_inner_size(PhysicalSize::new(1300, 800)),
-                        )
-                        .with_menu(None)
-                        .with_disable_context_menu(!cfg!(debug_assertions)),
-                )
-            })
-            .launch(app);
+                    Config::new().with_desktop_config(
+                        desktop::Config::new()
+                            .with_custom_head(
+                                r#"<script src="https://cdn.tailwindcss.com"> </script>"#.to_string(),
+                            )
+                            // .with_custom_head(r#"<link rel="stylesheet" href="tailwind.css">"#.to_string())
+                            .with_window(
+                                desktop::WindowBuilder::new()
+                                    .with_decorations(false)
+                                    .with_title(format!(
+                                        "{SHADOCAL_TITLE} v{SHADOCAL_VERSION} - {SHADOCAL_TITLE_DESC}"
+                                    ))
+                                    .with_maximizable(true)
+                                    .with_minimizable(true)
+                                    .with_min_inner_size(PhysicalSize::new(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT))
+                                    .with_inner_size_constraints(
+                                        desktop::tao::window::WindowSizeConstraints::new(
+                                            Some(desktop::tao::dpi::PixelUnit::Physical(
+                                                MIN_WINDOW_WIDTH.into(),
+                                            )),
+                                            Some(desktop::tao::dpi::PixelUnit::Physical(
+                                                MIN_WINDOW_HEIGHT.into(),
+                                            )),
+                                            None,
+                                            None,
+                                        ),
+                                    )
+                                    .with_inner_size(PhysicalSize::new(1300, 800)),
+                            )
+                            .with_menu(None)
+                            .with_disable_context_menu(!cfg!(debug_assertions)),
+                    )
+                })
+                .launch(app);
         }
         Ok(())
     }
@@ -96,5 +102,10 @@ impl App {
 
 #[component]
 pub fn app() -> Element {
-    rsx! { Router::<Route> {} }
+    rsx! {
+        div {
+            class: "bg-white dark:bg-gray-900",
+            Router::<Route> {}
+        }
+    }
 }

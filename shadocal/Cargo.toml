@@ -27,5 +27,6 @@ directories = "5.0.1"
 
 [features]
 default = []
+# web = ["dioxus/web"]
 server = ["dioxus/axum", "axum"]
 desktop = ["dioxus/desktop"]

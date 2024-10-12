@@ -1,7 +1,7 @@
 mod app;
 pub use app::App;
 
-mod route;
-use route::Route;
+mod routes;
+use routes::Route;
 
 use super::server;
