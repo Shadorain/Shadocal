@@ -7,13 +7,15 @@ use gcal_rs::{
         EventCalendarDate, EventConferenceData, EventStatus as GEventStatus,
         EventType as GEventType,
     },
-    CalendarListClient, EventClient, GCalClient, OAuth, OToken,
+    CalendarListClient, EventClient, GCalClient, OAuth,
 };
 use tokio::sync::RwLock;
 
-use super::{calendar_trait, Calendar, Event, EventStatus, EventType};
+pub use gcal_rs::{OAuthRequest, OToken};
 
-static OAUTH: LazyLock<RwLock<OAuth>> = LazyLock::new(|| {
+use super::{calendar_trait, Calendar, Event, EventStatus, EventType, InitToken};
+
+pub static OAUTH: LazyLock<OAuth> = LazyLock::new(|| {
     let client_id = std::env::var("GOOGLE_CLIENT_ID")
         .expect("[ERR] Missing the GOOGLE_CLIENT_ID environment variable.");
     let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")
@@ -24,7 +26,6 @@ static OAUTH: LazyLock<RwLock<OAuth>> = LazyLock::new(|| {
         client_secret,
         format!("http://{ip}:{}/auth", port + 1),
     )
-    .into()
 });
 
 pub struct GoogleCalendar {
@@ -34,30 +35,29 @@ pub struct GoogleCalendar {
 }
 
 impl GoogleCalendar {
-    pub async fn new(token: Option<String>) -> Result<Self> {
-        let token = if let Some(token) = token {
-            OAUTH.read().await.exhange_refresh(token).await
-        } else {
-            OAUTH.write().await.naive().await
-        }?;
+    pub async fn new(token: Option<InitToken>) -> Result<Self> {
+        let token = match token.context("Google calendar token is required")? {
+            InitToken::Access(tok) => tok,
+            InitToken::Refresh(refresh) => OAUTH.exhange_refresh(refresh).await?,
+        };
 
-        let (calendars, events) = GCalClient::new(token.access.clone())?.clients();
+        let (calendars, events) = GCalClient::new(token.clone())?.clients();
         Ok(Self {
             calendars,
             events,
             token: token.into(),
         })
     }
+
+    async fn refresh(&self) -> Result<()> {
+        OAUTH.refresh(&mut *self.token.write().await).await
+    }
 }
 
 #[calendar_trait]
 impl Calendar for GoogleCalendar {
     async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event> {
-        OAUTH
-            .read()
-            .await
-            .refresh(&mut *self.token.write().await)
-            .await?;
+        self.refresh().await?;
 
         let cal = self
             .calendars
@@ -75,11 +75,7 @@ impl Calendar for GoogleCalendar {
         start: DateTime<Local>,
         end: DateTime<Local>,
     ) -> Result<Vec<Event>> {
-        OAUTH
-            .read()
-            .await
-            .refresh(&mut *self.token.write().await)
-            .await?;
+        self.refresh().await?;
 
         let mut events = Vec::new();
         for cal in self
@@ -96,10 +92,6 @@ impl Calendar for GoogleCalendar {
             );
         }
         Ok(events)
-    }
-
-    async fn token(&self) -> Option<String> {
-        self.token.read().await.refresh.clone()
     }
 }
 

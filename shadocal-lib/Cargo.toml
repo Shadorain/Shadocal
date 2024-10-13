@@ -18,5 +18,5 @@ serde.workspace = true
 chrono = { version = "0.4", features = ["serde"] }
 directories = "5.0"
 
-gcal_rs = "0.1.5"
+gcal_rs = "0.1.6"
 async-trait = "0.1.82"

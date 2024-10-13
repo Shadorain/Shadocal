@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
 
-use super::{format::Format, Calendar, CalendarType, Event};
+use super::{format::Format, Calendar, CalendarType, Event, InitToken, OToken};
 
 #[derive(Default)]
 pub struct State {
@@ -15,19 +15,27 @@ impl State {
             calendars: HashMap::new(),
         }
     }
-    pub async fn configure(&mut self, config: HashMap<String, String>) -> Result<()> {
-        for (id, tok) in config.iter() {
-            println!("[INFO] Adding calendar: {} with id: {}", tok, id);
-            self.calendars.insert(
-                id.clone(),
-                CalendarType::Google.init(Some(tok.clone())).await?,
+    pub async fn configure(self, config: HashMap<String, String>) -> Result<Self> {
+        let mut calendars = self.calendars;
+        for (id, tok) in config.into_iter() {
+            println!("[INFO] Adding calendar: {} with id: {}", &tok, &id);
+            calendars.insert(
+                id,
+                CalendarType::Google
+                    .init(Some(InitToken::Refresh(tok)))
+                    .await?,
             );
         }
-        Ok(())
+        Ok(Self { calendars })
     }
-
-    pub async fn new_calendar(&mut self, id: String, cal: CalendarType) -> Result<()> {
-        self.calendars.insert(id, cal.init(None).await?);
+    pub async fn new_calendar(
+        &mut self,
+        cal: CalendarType,
+        id: String,
+        token: Option<OToken>,
+    ) -> Result<()> {
+        self.calendars
+            .insert(id, cal.init(token.map(InitToken::Access)).await?);
         Ok(())
     }
 
