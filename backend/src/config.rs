@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs::write, path::PathBuf};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 
 use directories::ProjectDirs;
@@ -20,8 +20,10 @@ impl Config {
         let path = path
             .map(PathBuf::from)
             .or_else(data_directory)
-            .ok_or_else(|| anyhow!("Failed to get config path"))?
-            .join(CONFIG_FILENAME);
+            .ok_or_else(|| anyhow!("Failed to get config path"))?;
+        std::fs::create_dir_all(&path).context(format!("{:?} could not be created", &path))?;
+
+        let path = path.join(CONFIG_FILENAME);
         if !path.exists() {
             std::fs::write(&path, toml::to_string(&Config::default())?)?;
         }

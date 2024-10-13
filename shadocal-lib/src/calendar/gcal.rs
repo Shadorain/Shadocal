@@ -21,11 +21,7 @@ pub static OAUTH: LazyLock<OAuth> = LazyLock::new(|| {
     let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")
         .expect("[ERR] Missing the GOOGLE_CLIENT_SECRET environment variable.");
     let (ip, port) = crate::ip_port();
-    OAuth::new(
-        client_id,
-        client_secret,
-        format!("http://{ip}:{}/auth", port + 1),
-    )
+    OAuth::new(client_id, client_secret, format!("http://{ip}:{port}/auth"))
 });
 
 pub struct GoogleCalendar {

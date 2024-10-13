@@ -34,6 +34,7 @@ impl State {
         id: String,
         token: Option<OToken>,
     ) -> Result<()> {
+        println!("Adding calendar: {id}");
         self.calendars
             .insert(id, cal.init(token.map(InitToken::Access)).await?);
         Ok(())

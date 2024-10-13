@@ -1,9 +1,12 @@
 use actix_cors::Cors;
 use actix_web::{get, http, web, App, HttpResponse, HttpServer, Responder};
+use tokio::sync::RwLock;
 
 use shadocal_lib::State;
 
-use super::tana;
+use super::{auth, tana};
+
+pub type BState = RwLock<State>;
 
 pub struct Server {
     ip: String,
@@ -25,7 +28,7 @@ impl Server {
         Self { ip, port }
     }
     pub async fn run(self, state: State) -> anyhow::Result<()> {
-        let state = web::Data::new(state);
+        let state = web::Data::new(RwLock::new(state));
 
         println!("🚀 Server started successfully");
         HttpServer::new(move || {
@@ -40,6 +43,7 @@ impl Server {
                 )
                 .service(index)
                 .configure(tana::config)
+                .configure(auth::config)
         })
         .bind((self.ip, self.port))?
         .run()

@@ -1,10 +1,16 @@
 use actix_web::{
     get,
     http::header,
-    web::{Data, Query},
+    web::{self, Data, Query},
     HttpResponse,
 };
-use shadocal_lib::{CalendarType, OAuthRequest, State, OAUTH};
+use shadocal_lib::{CalendarType, OAuthRequest, OAUTH};
+
+use super::BState;
+
+pub fn config(conf: &mut web::ServiceConfig) {
+    conf.service(login).service(auth);
+}
 
 #[get("/login")]
 async fn login() -> HttpResponse {
@@ -15,19 +21,20 @@ async fn login() -> HttpResponse {
 }
 
 #[get("/auth")]
-async fn auth(data: Data<State>, Query(params): Query<OAuthRequest>) -> HttpResponse {
+async fn auth(data: Data<BState>, Query(params): Query<OAuthRequest>) -> HttpResponse {
     let (_, token) = OAUTH.auth(params).await.expect("Failed to get token");
-    data.into_inner()
+    data.write()
+        .await
         .new_calendar(CalendarType::Google, String::new(), Some(token))
         .await
         .expect("Failed to add new calendar");
 
-    HttpResponse::Ok().body(format!(
+    HttpResponse::Ok().body(
         r#"<html>
         <head><title>Authorized</title></head>
         <body>
             Go back to the app!
         </body>
     </html>"#,
-    ))
+    )
 }
