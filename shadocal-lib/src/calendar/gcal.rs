@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
@@ -9,25 +9,22 @@ use gcal_rs::{
     },
     CalendarListClient, EventClient, GCalClient, OAuth,
 };
-use tokio::sync::RwLock;
-
 pub use gcal_rs::{OAuthRequest, OToken};
 
 use super::{calendar_trait, Calendar, Event, EventStatus, EventType, InitToken};
 
-pub static OAUTH: LazyLock<OAuth> = LazyLock::new(|| {
+pub static OAUTH: LazyLock<Arc<OAuth>> = LazyLock::new(|| {
     let client_id = std::env::var("GOOGLE_CLIENT_ID")
         .expect("[ERR] Missing the GOOGLE_CLIENT_ID environment variable.");
     let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")
         .expect("[ERR] Missing the GOOGLE_CLIENT_SECRET environment variable.");
     let (ip, port) = crate::ip_port();
-    OAuth::new(client_id, client_secret, format!("http://{ip}:{port}/auth"))
+    OAuth::new(client_id, client_secret, format!("http://{ip}:{port}/auth")).into()
 });
 
 pub struct GoogleCalendar {
     calendars: CalendarListClient,
     events: EventClient,
-    token: RwLock<OToken>,
 }
 
 impl GoogleCalendar {
@@ -37,24 +34,14 @@ impl GoogleCalendar {
             InitToken::Refresh(refresh) => OAUTH.exhange_refresh(refresh).await?,
         };
 
-        let (calendars, events) = GCalClient::new(token.clone())?.clients();
-        Ok(Self {
-            calendars,
-            events,
-            token: token.into(),
-        })
-    }
-
-    async fn refresh(&self) -> Result<()> {
-        OAUTH.refresh(&mut *self.token.write().await).await
+        let (calendars, events) = GCalClient::new(token, Some(OAUTH.clone()))?.clients();
+        Ok(Self { calendars, events })
     }
 }
 
 #[calendar_trait]
 impl Calendar for GoogleCalendar {
     async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event> {
-        self.refresh().await?;
-
         let cal = self
             .calendars
             .list(false, gcal_rs::CalendarAccessRole::Reader)
@@ -71,8 +58,6 @@ impl Calendar for GoogleCalendar {
         start: DateTime<Local>,
         end: DateTime<Local>,
     ) -> Result<Vec<Event>> {
-        self.refresh().await?;
-
         let mut events = Vec::new();
         for cal in self
             .calendars
