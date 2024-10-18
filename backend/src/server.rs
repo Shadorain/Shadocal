@@ -1,14 +1,9 @@
 use actix_cors::Cors;
-use actix_web::{get, http, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http, middleware::Logger, web, App, HttpResponse, HttpServer, Responder};
 
-pub mod state;
-mod tana;
-mod types;
+use shadocal_lib::{Db, State};
 
-pub use state::State;
-pub use types::*;
-
-use super::*;
+use super::{account, tana};
 
 pub struct Server {
     ip: String,
@@ -29,13 +24,13 @@ impl Server {
     pub fn new(ip: String, port: u16) -> Self {
         Self { ip, port }
     }
-    pub async fn run(self, config: Option<Config>) -> anyhow::Result<()> {
-        let state = web::Data::new(State::new(config).await?);
+    pub async fn run(self, db: Db) -> anyhow::Result<()> {
+        let state = web::Data::new(State::new(db).await?);
 
         println!("🚀 Server started successfully");
         HttpServer::new(move || {
             App::new()
-                .app_data(state.clone())
+                .wrap(Logger::default())
                 .wrap(
                     Cors::default()
                         .allowed_origin("https://app.tana.inc")
@@ -45,19 +40,12 @@ impl Server {
                 )
                 .service(index)
                 .configure(tana::config)
+                .configure(account::config)
+                .app_data(state.clone())
         })
         .bind((self.ip, self.port))?
         .run()
         .await?;
         Ok(())
     }
-}
-
-pub fn ip_port() -> (String, u16) {
-    let ip = std::env::var("SHADOCAL_IP");
-    let port = std::env::var("SHADOCAL_PORT").map(|v| {
-        v.parse::<u16>()
-            .expect("Invalid environment variable: SHADOCAL_PORT. Must be a valid port number.")
-    });
-    (ip.unwrap_or("127.0.0.1".to_string()), port.unwrap_or(7117))
 }

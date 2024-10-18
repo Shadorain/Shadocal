@@ -13,16 +13,11 @@ categories.workspace = true
 [dependencies]
 anyhow.workspace = true
 tokio.workspace = true
+serde.workspace = true
 
 chrono = { version = "0.4", features = ["serde"] }
 directories = "5.0"
-dotenv = "0.15.0"
+polodb_core = "5.1.2"
 
-actix-cors = "0.7"
-actix-web = "4.9"
-url = "^2"
-
-gcal_rs = "0.1.5"
-serde = { version = "1.0.209", features = ["derive"] }
+gcal_rs = { git = "https://github.com/Shadorain/gcal_rs" }
 async-trait = "0.1.82"
-toml = "0.8.19"

@@ -1,0 +1,20 @@
+[package]
+name = "backend"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+shadocal-lib = { path = "../shadocal-lib" }
+anyhow.workspace = true
+tokio = { workspace = true, features = ["full"] }
+serde.workspace = true
+
+actix-web = { version = "4.9.0", features = ["macros"] }
+actix-cors = "0.7.0"
+log = "0.4.22"

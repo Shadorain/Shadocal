@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
@@ -7,49 +7,46 @@ use gcal_rs::{
         EventCalendarDate, EventConferenceData, EventStatus as GEventStatus,
         EventType as GEventType,
     },
-    CalendarListClient, EventClient, GCalClient, OAuth, OToken,
+    CalendarListClient, EventClient, GCalClient, OAuth,
 };
-use tokio::sync::RwLock;
+pub use gcal_rs::{OAuthRequest, OToken};
 
-use super::{calendar_trait, Calendar, Event, EventStatus, EventType};
-use crate::server;
+use super::{calendar_trait, Calendar, Event, EventStatus, EventType, InitToken, Profile};
 
-static OAUTH: LazyLock<RwLock<OAuth>> = LazyLock::new(|| {
+pub static OAUTH: LazyLock<Arc<OAuth>> = LazyLock::new(|| {
     let client_id = std::env::var("GOOGLE_CLIENT_ID")
         .expect("[ERR] Missing the GOOGLE_CLIENT_ID environment variable.");
     let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")
         .expect("[ERR] Missing the GOOGLE_CLIENT_SECRET environment variable.");
-    let (ip, port) = server::ip_port();
+    let (ip, port) = crate::ip_port();
     OAuth::new(
         client_id,
         client_secret,
-        format!("http://{ip}:{}/auth", port + 1),
+        format!("http://{ip}:{port}/account/auth/authenticate"),
     )
     .into()
 });
 
 pub struct GoogleCalendar {
+    client: Arc<GCalClient>,
     calendars: CalendarListClient,
     events: EventClient,
-    token: RwLock<OToken>,
 }
 
 impl GoogleCalendar {
-    pub async fn new(token: Option<String>) -> Result<Self>
-    where
-        Self: Sized,
-    {
-        let token = if let Some(token) = token {
-            OAUTH.read().await.exhange_refresh(token).await
-        } else {
-            OAUTH.write().await.naive().await
-        }?;
+    pub async fn new(token: Option<InitToken>) -> Result<Self> {
+        let token = match token.context("Google calendar token is required")? {
+            InitToken::Access(tok) => tok,
+            InitToken::Refresh(refresh) => OAUTH.exhange_refresh(refresh).await?,
+        };
 
-        let (calendars, events) = GCalClient::new(token.access.clone())?.clients();
+        println!("Token: {token:?}");
+        let client = GCalClient::new(token, Some(OAUTH.clone()))?;
+        let (calendars, events) = client.clone().clients();
         Ok(Self {
+            client,
             calendars,
             events,
-            token: token.into(),
         })
     }
 }
@@ -57,12 +54,6 @@ impl GoogleCalendar {
 #[calendar_trait]
 impl Calendar for GoogleCalendar {
     async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event> {
-        OAUTH
-            .read()
-            .await
-            .refresh(&mut *self.token.write().await)
-            .await?;
-
         let cal = self
             .calendars
             .list(false, gcal_rs::CalendarAccessRole::Reader)
@@ -79,12 +70,6 @@ impl Calendar for GoogleCalendar {
         start: DateTime<Local>,
         end: DateTime<Local>,
     ) -> Result<Vec<Event>> {
-        OAUTH
-            .read()
-            .await
-            .refresh(&mut *self.token.write().await)
-            .await?;
-
         let mut events = Vec::new();
         for cal in self
             .calendars
@@ -102,8 +87,14 @@ impl Calendar for GoogleCalendar {
         Ok(events)
     }
 
-    async fn token(&self) -> Option<String> {
-        self.token.read().await.refresh.clone()
+    async fn get_profile(&self) -> Result<Profile> {
+        Ok(self
+            .client
+            .get(None, gcal_rs::UserInfo::default())
+            .await?
+            .json::<gcal_rs::UserInfo>()
+            .await?
+            .into())
     }
 }
 
@@ -141,6 +132,17 @@ impl From<gcal_rs::Event> for Event {
             location: value.location,
             link: link(value.conference_data),
             cal_link: Some(value.html_link),
+        }
+    }
+}
+impl From<gcal_rs::UserInfo> for Profile {
+    fn from(value: gcal_rs::UserInfo) -> Self {
+        Self {
+            id: value.id,
+            email: value.email,
+            name: value.name,
+            picture_link: value.picture,
+            refresh_token: None,
         }
     }
 }
