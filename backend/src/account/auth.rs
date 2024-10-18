@@ -4,12 +4,10 @@ use actix_web::{
     web::{self, Data, Query},
     HttpResponse,
 };
-use shadocal_lib::{CalendarType, OAuthRequest, OAUTH};
-
-use super::BState;
+use shadocal_lib::{CalendarType, OAuthRequest, State, OAUTH};
 
 pub fn config(conf: &mut web::ServiceConfig) {
-    conf.service(login).service(auth);
+    conf.service(web::scope("/auth").service(login).service(authenticate));
 }
 
 #[get("/login")]
@@ -20,12 +18,12 @@ async fn login() -> HttpResponse {
         .finish()
 }
 
-#[get("/auth")]
-async fn auth(data: Data<BState>, Query(params): Query<OAuthRequest>) -> HttpResponse {
-    let (_, token) = OAUTH.auth(params).await.expect("Failed to get token");
-    data.write()
-        .await
-        .new_calendar(CalendarType::Google, String::new(), Some(token))
+#[get("/authenticate")]
+async fn authenticate(data: Data<State>, Query(params): Query<OAuthRequest>) -> HttpResponse {
+    let Ok((_, token)) = OAUTH.auth(params).await else {
+        return HttpResponse::InternalServerError().into();
+    };
+    data.new_calendar(CalendarType::Google, Some(token))
         .await
         .expect("Failed to add new calendar");
 

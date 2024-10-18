@@ -15,7 +15,6 @@ anyhow.workspace = true
 tokio = { workspace = true, features = ["full"] }
 serde.workspace = true
 
+actix-web = { version = "4.9.0", features = ["macros"] }
 actix-cors = "0.7.0"
-actix-web = "4.9.0"
-toml = "0.8.19"
-directories = "5.0.1"
+log = "0.4.22"

@@ -2,46 +2,62 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, Local, NaiveDate, NaiveTime};
+use tokio::sync::RwLock;
 
-use super::{format::Format, Calendar, CalendarType, Event, InitToken, OToken};
+use super::{
+    db::{doc, CollectionT, Db},
+    format::Format,
+    Calendar, CalendarType, Event, InitToken, OToken, Profile,
+};
 
-#[derive(Default)]
 pub struct State {
-    pub calendars: HashMap<String, Box<dyn Calendar>>,
+    pub calendars: RwLock<HashMap<String, Box<dyn Calendar>>>,
+    pub db: Db,
 }
 impl State {
-    pub fn new() -> Self {
-        Self {
-            calendars: HashMap::new(),
-        }
-    }
-    pub async fn configure(self, config: HashMap<String, String>) -> Result<Self> {
-        let mut calendars = self.calendars;
-        for (id, tok) in config.into_iter() {
-            println!("[INFO] Adding calendar: {} with id: {}", &tok, &id);
+    pub async fn new(db: Db) -> Result<Self> {
+        let mut calendars = HashMap::new();
+        for profile in db.accounts().find(doc! {}).run()? {
+            let Profile {
+                email,
+                refresh_token,
+                ..
+            } = profile?;
+            println!("[INFO] Adding account: {email}");
             calendars.insert(
-                id,
+                email,
                 CalendarType::Google
-                    .init(Some(InitToken::Refresh(tok)))
+                    .init(Some(InitToken::Refresh(
+                        refresh_token.expect("Token currently expected to never be None"),
+                    )))
                     .await?,
             );
         }
-        Ok(Self { calendars })
+        Ok(Self {
+            calendars: calendars.into(),
+            db,
+        })
     }
-    pub async fn new_calendar(
-        &mut self,
-        cal: CalendarType,
-        id: String,
-        token: Option<OToken>,
-    ) -> Result<()> {
-        println!("Adding calendar: {id}");
-        self.calendars
-            .insert(id, cal.init(token.map(InitToken::Access)).await?);
+
+    pub async fn new_calendar(&self, cal: CalendarType, token: Option<OToken>) -> Result<()> {
+        let cal = cal.init(token.clone().map(InitToken::Access)).await?;
+        let profile = cal.get_profile().await?.refresh_token(token);
+        println!("Adding calendar: {}", profile.email);
+
+        self.db.add_account(&profile)?;
+
+        self.calendars.write().await.insert(profile.email, cal);
         Ok(())
     }
 
     pub async fn get_event(&self, cal_id: String, event_id: String) -> Result<Event> {
-        self.get_cal(&cal_id)?.get_event(cal_id, event_id).await
+        self.calendars
+            .read()
+            .await
+            .get(&cal_id)
+            .ok_or_else(|| anyhow!("No such calendar for id: {}", cal_id))?
+            .get_event(cal_id, event_id)
+            .await
     }
     pub async fn get_eventf<F: Format>(&self, cal_id: String, event_id: String) -> Result<String> {
         F::format(self.get_event(cal_id, event_id).await?).context("Failed to format event")
@@ -49,7 +65,7 @@ impl State {
 
     pub async fn list_events(&self, start: NaiveDate, end: NaiveDate) -> Result<Vec<Event>> {
         let mut events = Vec::new();
-        for (_, cal) in self.calendars.iter() {
+        for (_, cal) in self.calendars.read().await.iter() {
             events.extend(
                 cal.list_events(to_datetime(start), to_datetime(end))
                     .await?,
@@ -65,11 +81,19 @@ impl State {
         F::format_list(self.list_events(start, end).await?).context("Failed to format event list")
     }
 
-    fn get_cal(&self, cal_id: &str) -> Result<&dyn Calendar> {
-        self.calendars
-            .get(cal_id)
-            .ok_or_else(|| anyhow!("No such calendar for id: {}", cal_id))
-            .map(|x| &**x)
+    pub async fn delete(&self, id: Option<String>) -> Result<()> {
+        let mut cals = self.calendars.write().await;
+        let query = if let Some(id) = id {
+            cals.remove(&id).context("Could not find account")?;
+            doc! {
+                "id": { "$eq": id },
+            }
+        } else {
+            cals.clear();
+            doc! {}
+        };
+        self.db.accounts().delete_many(query)?;
+        Ok(())
     }
 }
 

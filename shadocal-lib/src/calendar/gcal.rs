@@ -11,7 +11,7 @@ use gcal_rs::{
 };
 pub use gcal_rs::{OAuthRequest, OToken};
 
-use super::{calendar_trait, Calendar, Event, EventStatus, EventType, InitToken};
+use super::{calendar_trait, Calendar, Event, EventStatus, EventType, InitToken, Profile};
 
 pub static OAUTH: LazyLock<Arc<OAuth>> = LazyLock::new(|| {
     let client_id = std::env::var("GOOGLE_CLIENT_ID")
@@ -19,10 +19,16 @@ pub static OAUTH: LazyLock<Arc<OAuth>> = LazyLock::new(|| {
     let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")
         .expect("[ERR] Missing the GOOGLE_CLIENT_SECRET environment variable.");
     let (ip, port) = crate::ip_port();
-    OAuth::new(client_id, client_secret, format!("http://{ip}:{port}/auth")).into()
+    OAuth::new(
+        client_id,
+        client_secret,
+        format!("http://{ip}:{port}/account/auth/authenticate"),
+    )
+    .into()
 });
 
 pub struct GoogleCalendar {
+    client: Arc<GCalClient>,
     calendars: CalendarListClient,
     events: EventClient,
 }
@@ -34,8 +40,14 @@ impl GoogleCalendar {
             InitToken::Refresh(refresh) => OAUTH.exhange_refresh(refresh).await?,
         };
 
-        let (calendars, events) = GCalClient::new(token, Some(OAUTH.clone()))?.clients();
-        Ok(Self { calendars, events })
+        println!("Token: {token:?}");
+        let client = GCalClient::new(token, Some(OAUTH.clone()))?;
+        let (calendars, events) = client.clone().clients();
+        Ok(Self {
+            client,
+            calendars,
+            events,
+        })
     }
 }
 
@@ -74,6 +86,16 @@ impl Calendar for GoogleCalendar {
         }
         Ok(events)
     }
+
+    async fn get_profile(&self) -> Result<Profile> {
+        Ok(self
+            .client
+            .get(None, gcal_rs::UserInfo::default())
+            .await?
+            .json::<gcal_rs::UserInfo>()
+            .await?
+            .into())
+    }
 }
 
 impl From<gcal_rs::Event> for Event {
@@ -110,6 +132,17 @@ impl From<gcal_rs::Event> for Event {
             location: value.location,
             link: link(value.conference_data),
             cal_link: Some(value.html_link),
+        }
+    }
+}
+impl From<gcal_rs::UserInfo> for Profile {
+    fn from(value: gcal_rs::UserInfo) -> Self {
+        Self {
+            id: value.id,
+            email: value.email,
+            name: value.name,
+            picture_link: value.picture,
+            refresh_token: None,
         }
     }
 }

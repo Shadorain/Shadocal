@@ -1,12 +1,12 @@
 use anyhow::Result;
 use chrono::{DateTime, Local};
 
-mod event;
 mod gcal;
+mod types;
 
 pub use async_trait::async_trait as calendar_trait;
 
-pub use event::*;
+pub use types::*;
 // TODO: Find a solution for all calendar types...
 pub use gcal::{OAuthRequest, OToken, OAUTH};
 
@@ -34,4 +34,6 @@ pub trait Calendar: Send + Sync {
 
     async fn list_events(&self, start: DateTime<Local>, end: DateTime<Local>)
         -> Result<Vec<Event>>;
+
+    async fn get_profile(&self) -> Result<Profile>;
 }

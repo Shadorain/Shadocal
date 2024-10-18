@@ -17,6 +17,7 @@ serde.workspace = true
 
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", features = ["router"] }
 dioxus-logger = "0.5.1"
+polodb = "5.1.2"
 
 [features]
 default = []
