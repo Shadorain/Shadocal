@@ -11,15 +11,24 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
+shadocal-lib = { path = "../shadocal-lib" }
 anyhow.workspace = true
 tokio.workspace = true
 serde.workspace = true
 
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", features = ["router"] }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", features = [
+    "fullstack",
+    "router",
+] }
 dioxus-logger = "0.5.1"
 polodb = "5.1.2"
+axum = { version = "0.7.7", optional = true }
+directories = "5.0.1"
+log = "0.4.22"
+open = "5.3.0"
 
 [features]
 default = []
-web = ["dioxus/web"]
+# web = ["dioxus/web"]
+server = ["dep:axum", "dioxus/server"]
 desktop = ["dioxus/desktop"]

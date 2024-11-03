@@ -5,6 +5,8 @@ use home::Home;
 mod components;
 use components::*;
 
+use super::*;
+
 #[derive(Routable, Debug, Clone)]
 pub enum Route {
     #[layout(SideBar)]

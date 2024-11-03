@@ -40,7 +40,6 @@ impl GoogleCalendar {
             InitToken::Refresh(refresh) => OAUTH.exhange_refresh(refresh).await?,
         };
 
-        println!("Token: {token:?}");
         let client = GCalClient::new(token, Some(OAUTH.clone()))?;
         let (calendars, events) = client.clone().clients();
         Ok(Self {

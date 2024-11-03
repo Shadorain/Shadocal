@@ -11,7 +11,7 @@ pub use polodb_core::{
 
 use super::Profile;
 
-const DB_FILENAME: &str = "shadocal.db";
+const DB_FILENAME: &str = "db";
 
 pub struct Db(Database);
 
@@ -32,6 +32,24 @@ impl Db {
     pub fn add_account(&self, profile: &Profile) -> Result<()> {
         self.accounts().insert_one(profile)?;
         Ok(())
+    }
+    pub fn del_account(&self, email: &str) -> Result<()> {
+        self.accounts().delete_one(doc! {
+            "email": { "$eq": email },
+        })?;
+        Ok(())
+    }
+    pub fn get_account(&self, email: &str) -> Result<Option<Profile>> {
+        Ok(self.accounts().find_one(doc! {
+            "email": { "$eq": email },
+        })?)
+    }
+    pub fn list_accounts(&self) -> Result<Vec<Profile>> {
+        Ok(self
+            .accounts()
+            .find(doc! {})
+            .run()?
+            .collect::<polodb_core::Result<Vec<Profile>>>()?)
     }
 }
 

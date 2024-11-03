@@ -42,11 +42,14 @@ impl State {
     pub async fn new_calendar(&self, cal: CalendarType, token: Option<OToken>) -> Result<()> {
         let cal = cal.init(token.clone().map(InitToken::Access)).await?;
         let profile = cal.get_profile().await?.refresh_token(token);
-        println!("Adding calendar: {}", profile.email);
 
-        self.db.add_account(&profile)?;
+        // Ensure account doesn't already exists
+        if self.db.get_account(&profile.email)?.is_none() {
+            println!("[INFO] Adding calendar: {}", profile.email);
+            self.db.add_account(&profile)?;
 
-        self.calendars.write().await.insert(profile.email, cal);
+            self.calendars.write().await.insert(profile.email, cal);
+        }
         Ok(())
     }
 
