@@ -1,7 +1,7 @@
 use axum::{
     extract::{Query, State},
     http::StatusCode,
-    response::{IntoResponse, Redirect},
+    response::{Html, IntoResponse, Redirect},
 };
 use dioxus::prelude::*;
 use shadocal_lib::{CalendarType, OAuthRequest, OAUTH};
@@ -27,10 +27,12 @@ pub async fn authenticate(
         .new_calendar(CalendarType::Google, Some(token))
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(r#"<html>
+    Ok(Html(
+        r#"<html>
         <head><title>Authorized</title></head>
         <body>
             Successfully authenticated. Return to your application! You can close this window.
         </body>
-    </html>"#)
+    </html>"#,
+    ))
 }
