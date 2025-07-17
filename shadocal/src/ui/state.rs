@@ -1,4 +1,5 @@
-use shadocal_lib::{Event, Profile};
+use dioxus::prelude::*;
+use shadocal_lib::Profile;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum UIAction {
@@ -12,21 +13,13 @@ impl UIAction {
     }
 }
 
-#[derive(Debug)]
-pub struct Account {
-    profile: Profile,
-    events: Vec<Event>,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct UIState {
-    accounts: Vec<Account>,
+    pub current_profile: Option<Signal<Profile>>,
 }
 
 impl UIState {
-    pub fn new() -> Self {
-        Self {
-            accounts: Vec::new(),
-        }
+    pub fn set_profile(&mut self, profile: Signal<Profile>) {
+        self.current_profile = Some(profile);
     }
 }

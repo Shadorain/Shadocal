@@ -113,7 +113,7 @@ impl App {
 
 #[component]
 pub fn app() -> Element {
-    use_context_provider(|| Signal::new(UIState::new()));
+    use_context_provider(|| Signal::new(UIState::default()));
 
     rsx! {
         div {
